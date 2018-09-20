@@ -67,7 +67,7 @@ namespace DatingApp.API.Controllers
 
             var tokenDescriptor = new SecurityTokenDescriptor{
 
-                Subject = new ClaimsIdentity(claims),
+                Subject = new ClaimsIdentity(_config.GetSection("AppSetting:Token").Value),
                 Expires = DateTime.Now.AddDays(1),
                 SigningCredentials = creds
             };
