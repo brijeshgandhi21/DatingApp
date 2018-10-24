@@ -10,11 +10,15 @@ import { Router } from '@angular/router';
 })
 export class NavComponent implements OnInit {
   model: any = {};
+  photoUrl: string;
+
   constructor(public authSetvice: AuthService,
     private alertify: AlertifyService,
     private router: Router) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.authSetvice.photoUrl.subscribe(photoUrl => this.photoUrl = photoUrl);
+  }
 
   login() {
     this.authSetvice.login(this.model).subscribe(next => {
@@ -32,7 +36,10 @@ export class NavComponent implements OnInit {
 
   logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    this.authSetvice.decodedToken = null;
+    this.authSetvice.currentUser = null;
     this.alertify.message('logged out');
-    this.router.navigate(['/home']);
+    this.router.navigate(['/']);
   }
 }
