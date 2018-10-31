@@ -13,8 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 
 namespace DatingApp.API.Controllers {
-    
-    [ServiceFilter(typeof(LogUserActivity))]
+
+    [ServiceFilter (typeof (LogUserActivity))]
     [Authorize]
     [Route ("api/[controller]")]
     [ApiController]
@@ -30,15 +30,28 @@ namespace DatingApp.API.Controllers {
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUsers () {
-            var users = await _repo.GetUsers ();
+        public async Task<IActionResult> GetUsers ([FromQuery] UserParams userParams) {
+
+            var currentId = int.Parse (User.FindFirst (ClaimTypes.NameIdentifier).Value);
+
+            var userFromRepo = await _repo.GetUser (currentId);
+
+            userParams.UserId = currentId;
+
+            if (string.IsNullOrEmpty (userParams.Gender)) {
+                userParams.Gender = userFromRepo.Gender == "male" ? "female" : "male";
+            }
+
+            var users = await _repo.GetUsers (userParams);
 
             var usersToReturn = _mapper.Map<IEnumerable<UserForListDto>> (users);
+
+            Response.AddPagination (users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
 
             return Ok (usersToReturn);
         }
 
-        [HttpGet ("{id}", Name="GetUser")]
+        [HttpGet ("{id}", Name = "GetUser")]
         public async Task<IActionResult> GetUser (int id) {
             var user = await _repo.GetUser (id);
 
@@ -60,8 +73,8 @@ namespace DatingApp.API.Controllers {
 
             if (await _repo.SaveAll ())
                 return NoContent ();
-            
-            throw new Exception($"Updating user {id} failed on save");
+
+            throw new Exception ($"Updating user {id} failed on save");
         }
     }
 }
